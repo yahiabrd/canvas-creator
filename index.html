@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Client</title>
+</head>
+<body>
+
+	Canvas creator<br>
+
+	<div style='border:1px solid black;padding-left:20px'>
+		Color : <input type="text" id="color"> <br>
+		Position X : <input type="text" id="posX"> <br>
+		Position Y : <input type="text" id="posY"> <br>
+		Width : <input type="text" id="width"> <br>
+		Height : <input type="text" id="height"> <br>
+	</div>
+
+	<button onClick="create()">Create !</button><br><br>
+
+	<canvas width="600px" height="600px" style="border:1px solid red;"></canvas>
+
+	<script>
+		var canvas = document.querySelector('canvas')
+		var ctx = canvas.getContext('2d')
+
+		const myId = uniqueId()
+
+		if ("WebSocket" in window) 
+		{
+			try {
+				var ws = new WebSocket("ws://localhost:8080");
+
+				ws.onopen = function() {
+					ws.send("connected " + myId);
+				};
+
+				ws.onmessage = function (evt) {
+					var canvas = JSON.parse(evt.data);
+					if(canvas) {
+						console.log(canvas)
+						console.log('drawing...')
+						ctx.fillStyle = canvas.color;
+						ctx.fillRect(canvas.x, canvas.y, canvas.width, canvas.height);
+					}
+				};
+
+				ws.onclose = function() { 
+					
+				};
+
+			}catch(error){
+				console.log(error);
+			}
+
+		} else {
+			alert("WebSocket is not supported by your Browser!");
+		}
+
+		function create() {
+			canvas = {
+				color: document.querySelector('#color').value,
+				x: Number(document.querySelector('#posX').value),
+				y: Number(document.querySelector('#posY').value),
+				width: Number(document.querySelector('#width').value),
+				height: Number(document.querySelector('#height').value)
+			}
+			ws.send(JSON.stringify(canvas))
+		}
+
+		function uniqueId() {
+			return Math.floor(Math.random() * Date.now())
+		}
+	</script>
+</body>
+</html>
